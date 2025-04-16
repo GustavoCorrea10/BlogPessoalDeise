@@ -38,8 +38,12 @@ public class UsuarioService {
 	
 	public void deletarUsuario(Long id) {
 		Optional<Usuario> usuario = usuarioRepository.findById(id);
-		if(usuario.isEmpty())
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		
+		if(usuario.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario não existe!");
+		}
+		
+		
 		usuarioRepository.deleteById(id);
 	}
 }
