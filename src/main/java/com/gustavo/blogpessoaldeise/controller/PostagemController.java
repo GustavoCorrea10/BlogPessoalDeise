@@ -16,38 +16,38 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gustavo.blogpessoaldeise.model.Usuario;
-import com.gustavo.blogpessoaldeise.service.UsuarioService;
+import com.gustavo.blogpessoaldeise.model.Postagem;
+import com.gustavo.blogpessoaldeise.service.PostagemService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/postagem")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-public class UsuarioController {
+public class PostagemController {
 
 	@Autowired
-	private UsuarioService usuarioService;
+	private PostagemService postagemService;
 
 	@GetMapping
-	public ResponseEntity<List<Usuario>> getAll() {
-		return ResponseEntity.ok(usuarioService.listarTodos());
+	public ResponseEntity<List<Postagem>> getAll() {
+		return ResponseEntity.ok(postagemService.listarPostagem());
 	}
 
 	@PostMapping("/criar")
-	public ResponseEntity<Usuario> post(@Valid @RequestBody Usuario usuario) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.criarUsuario(usuario));
+	public ResponseEntity<Postagem> post(@RequestBody @Valid Postagem postagem) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(postagemService.criarPostagem(postagem));
 	}
 
 	@PutMapping("/editar")
-	public ResponseEntity<Usuario> put(@Valid @RequestBody Usuario usuario) {
-		return ResponseEntity.ok(usuarioService.atualizarUsuario(usuario));
+	public ResponseEntity<Postagem> put(@RequestBody @Valid Postagem postagem) {
+		return ResponseEntity.ok(postagemService.editarPostagem(postagem));
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void delete(@PathVariable Long id) {
-		usuarioService.deletarUsuario(id);
+    public void delete(@PathVariable Long id) {
+		postagemService.deletarPostagem(id);
 	}
 
 }

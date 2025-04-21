@@ -25,7 +25,7 @@ public class Usuario {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@NotNull(message = "O nome é obrigatorio")
+	@NotBlank(message = "O nome é obrigatório")
 	private String nome;
 
 	@NotNull(message = "O Atributo Usuário é Obrigatório!")
@@ -91,4 +91,5 @@ public class Usuario {
 		this.postagem = postagem;
 	}
 
+	
 }

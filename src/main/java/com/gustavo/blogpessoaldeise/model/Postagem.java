@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -23,13 +22,11 @@ public class Postagem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@NotBlank(message = "O titulo é obrigatório!")
-	@Size(min = 5, max = 100, message = "Digite no minimo 5 e no maximo 100 caracteres")
-	private String titulo;
-
-	@NotBlank(message = "o campo é obrigatório")
-	@Size(min = 10, max = 1000, message = "Digite no minimo 10 e no maximo 1000 caracteres")
+	@Size(max = 3000, message = "Digite no maximo 20000 caracteres")
 	private String texto;
+	
+	@Size(max = 3000, message = "Digite no maximo 20000 caracteres")
+	private String fotoPostagem;
 
 	@UpdateTimestamp
 	private LocalDateTime dataPostagem;
@@ -44,14 +41,6 @@ public class Postagem {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getTitulo() {
-		return titulo;
-	}
-
-	public void setTitulo(String titulo) {
-		this.titulo = titulo;
 	}
 
 	public String getTexto() {
@@ -77,5 +66,15 @@ public class Postagem {
 	public void setUsuario(Usuario usuario) {
 		this.usuario = usuario;
 	}
+
+	public String getFotoPostagem() {
+		return fotoPostagem;
+	}
+
+	public void setFotoPostagem(String fotoPostagem) {
+		this.fotoPostagem = fotoPostagem;
+	}
+	
+	
 
 }
