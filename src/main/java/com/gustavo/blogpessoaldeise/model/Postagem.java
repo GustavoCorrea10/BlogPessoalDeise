@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -22,10 +23,11 @@ public class Postagem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Size(max = 3000, message = "Digite no maximo 20000 caracteres")
+	@NotBlank
+	@Size(max = 3000, message = "Digite no maximo 3000 caracteres")
 	private String texto;
 	
-	@Size(max = 3000, message = "Digite no maximo 20000 caracteres")
+	@Size(max = 3000, message = "Digite no maximo 3000 caracteres")
 	private String fotoPostagem;
 
 	@UpdateTimestamp

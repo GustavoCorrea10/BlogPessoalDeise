@@ -14,7 +14,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -28,12 +27,13 @@ public class Usuario {
 	@NotBlank(message = "O nome é obrigatório")
 	private String nome;
 
-	@NotNull(message = "O Atributo Usuário é Obrigatório!")
-	@Email(message = "O Atributo Usuário deve ser um email válido!")
+	@NotBlank(message = "O Atributo Email é Obrigatório!")
+	@Email(message = "O Atributo Email deve ser um email válido!")
 	private String email;
 
 	@NotBlank(message = "O Atributo Senha é Obrigatório!")
 	@Size(min = 8, message = "A Senha deve ter no mínimo 8 caracteres")
+	//@JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Adicione esta linha
 	private String senha;
 
 	@Size(max = 5000, message = "O link da foto não pode ser maior do que 5000 caracteres")

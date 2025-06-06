@@ -25,32 +25,45 @@ public class PostagemService {
 		return postagemRepository.findAll();
 	}
 
+	
+	
+	
 	public Postagem criarPostagem(Postagem postagem) {
 		if (usuarioRepository.existsById(postagem.getUsuario().getId())) {
 			return postagemRepository.save(postagem);
 
 		}
-		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario não existe!");
+		throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Usuario não existe!");
 
 	}
 
+	
+	
+	
+	
+	
 	public Postagem editarPostagem(Postagem postagem) {
 
 		// VERIFICA SE A POSTAGEM EXISTE(SE EXISTE, ELE CAI NO RETURN, SE NÃO, CAI NO
 		// THROW NEW)
 		if (!postagemRepository.existsById(postagem.getId())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Postagem não existe");
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Postagem não existe");
 		}
 
 		// VERIFICA SE O USUARIO EXISTE
 		if (!usuarioRepository.existsById(postagem.getUsuario().getId())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não existe");
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Usuário não existe");
 		}
 
 		// CE TUDO EXISTIR, CAI NO RETURN E SALVA (ATUALIZA) O USUARIO
 		return postagemRepository.save(postagem);
 	}
 
+	
+	
+	
+	
+	
 	public void deletarPostagem(Long id) {
 		Optional<Postagem> postagem = postagemRepository.findById(id);
 		if (postagem.isEmpty()) {

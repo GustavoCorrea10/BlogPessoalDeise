@@ -17,11 +17,16 @@ public class UsuarioService {
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 
-	public List<Usuario> listarTodos() {
+	public List<Usuario> listarTodos() {		
 		return usuarioRepository.findAll();
 	}
 
 	public Usuario criarUsuario(Usuario usuario) {
+		Optional<Usuario> usuarioExiste = usuarioRepository.findByEmail(usuario.getEmail());
+
+		if(usuarioExiste.isPresent()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário (e-mail) já existe!");
+		}
 		return usuarioRepository.save(usuario);
 	}
 
@@ -29,6 +34,13 @@ public class UsuarioService {
 		// VERIFICA SE O USUARIO EXISTE
 		if (!usuarioRepository.existsById(usuario.getId())) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario não encontrado");
+		}
+		
+		Optional<Usuario> usuarioExiste = usuarioRepository.findByEmail(usuario.getEmail());
+		
+		if(usuarioExiste.isPresent() && !usuarioExiste.get().getId().equals(usuario.getId())) {
+	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O e-mail informado já está em uso por outro usuário.");
+
 		}
 
 		// SE EXISTE, ELE CAI NO RETURN E SALVA (ATUALIZA)
