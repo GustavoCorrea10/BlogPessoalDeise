@@ -22,23 +22,40 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+
+//@COMPONENT: TRANSFORMA ESTA CLASSE EM UM COMPONENTE GERENCIADO PELO SPRING.
+//É COMO COLOCAR O "SEGURANÇA" NA LISTA DE FUNCIONÁRIOS DA EMPRESA.
+//A CLASSE EXTENDS ONCEPERREQUESTFILTER: ISSO GARANTE QUE O "SEGURANÇA" VERIFIQUE CADA PESSOA APENAS UMA VEZ, MESMO QUE ELA PASSE POR VÁRIOS CORREDORES.
 @Component
-//ANOTAÇÃO PARA O SPRING GERENCIAR ESSA CLASSE COMO UM COMPONENTE
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+	
+	
+	
 @Autowired
 // INJEÇÃO AUTOMÁTICA DO SERVIÇO QUE TRABALHA COM TOKENS JWT
+// É O SEGURANÇA PEGANDO A "FÁBRICA DE CRACHÁS" PARA SABER COMO LER E VALIDAR OS CRACHÁS.
 private JwtService jwtService;
+
+
+
+
 
 @Autowired
 // INJEÇÃO AUTOMÁTICA DO SERVIÇO QUE CARREGA OS DADOS DO USUÁRIO
+// É O SEGURANÇA PEGANDO O CONTATO DO "PORTEIRO" PARA CONFERIR A LISTA DE MEMBROS.
 private UserDetailsServiceImpl userDetailsService;
 
+
+
+
+//MÉTODO PRINCIPAL DO FILTRO. É AQUI QUE O TRABALHO DO SEGURANÇA ACONTECE.
+// ELE RECEBE O PEDIDO DE ENTRADA (REQUEST), A RESPOSTA QUE SERÁ DADA (RESPONSE) E A "FILA DE VERIFICAÇÃO" (FILTERCHAIN).
 @Override
-// MÉTODO QUE SERÁ CHAMADO AUTOMATICAMENTE PARA FILTRAR TODAS AS REQUISIÇÕES
 protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-   
-   // PEGAR O CABEÇALHO "Authorization" DA REQUISIÇÃO
+ 
+	// PASSO 1: TENTAR PEGAR O CRACHÁ (TOKEN) DA PESSOA.
+    // O CRACHÁ GERALMENTE VEM NO CABEÇALHO "AUTHORIZATION".
    String authHeader = request.getHeader("Authorization");
    String token = null;
    String useremail = null;
@@ -46,38 +63,63 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
    
    
    
-   
+   // ESTE BLOCO 'TRY' É PARA TENTAR FAZER ALGO QUE PODE DAR ERRO.
+   // SE O CRACHÁ FOR FALSO OU ESTRAGADO, O ERRO SERÁ CAPTURADO PELO 'CATCH' LÁ EMBAIXO
    try {
-       // VERIFICA SE O CABEÇALHO NÃO É NULO E COMEÇA COM "Bearer "
+	   
+	   // VERIFICA SE A PESSOA MOSTROU ALGUM CABEÇALHO E SE ELE COMEÇA COM "BEARER ".
+       // "BEARER" É O PADRÃO, COMO DIZER "EU ESTOU PORTANDO ESTE CRACHÁ"
        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-           // REMOVE A PALAVRA "Bearer " DO COMEÇO PARA PEGAR APENAS O TOKEN
-           token = authHeader.substring(7);
-           // EXTRAI O USERNAME DO TOKEN USANDO O SERVIÇO JWT
+    	   
+           // SE SIM, PEGA SÓ O CÓDIGO DO CRACHÁ, IGNORANDO O "BEARER ".
+    	   token = authHeader.substring(7);
+
+           // USA A "FÁBRICA DE CRACHÁS" (JWTSERVICE) PARA LER O NOME ESCRITO NO CRACHÁ.
            useremail = jwtService.extractUsername(token);
        }
 
-       // SE O USERNAME FOI ENCONTRADO E NÃO HÁ NINGUÉM AUTENTICADO AINDA NO CONTEXTO DE SEGURANÇA
+       
+       // PASSO 2: VERIFICAR O CRACHÁ E AUTORIZAR A ENTRADA.
+       // "SE CONSEGUIMOS LER UM E-MAIL DO CRACHÁ E AINDA NÃO TEM NINGUÉM COM 'PULSEIRINHA VIP' NESTA REQUISIÇÃO..."
        if (useremail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-           // CARREGA OS DADOS DO USUÁRIO PELO USERNAME
+    	   
+
+           // USA O "PORTEIRO" (USERDETAILSSERVICE) PARA BUSCAR A FICHA COMPLETA DO USUÁRIO PELO E-MAIL.
            UserDetails userDetails = userDetailsService.loadUserByUsername(useremail);
                
-           // VALIDA SE O TOKEN É VÁLIDO PARA ESSE USUÁRIO
+           
+
+           // USA A "FÁBRICA DE CRACHÁS" (JWTSERVICE) PARA VALIDAR O CRACHÁ:
+           // "ESTE CRACHÁ PERTENCE MESMO A ESTA PESSOA E NÃO ESTÁ VENCIDO?"
            if (jwtService.validateToken(token, userDetails)) {
-               // CRIA UM OBJETO DE AUTENTICAÇÃO PARA O USUÁRIO, COM SUAS PERMISSÕES
+        	   
+
+               // SE O CRACHÁ É VÁLIDO, CRIA UMA "PULSEIRINHA VIP" (AUTENTICAÇÃO) PARA O USUÁRIO.
                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-               // ADICIONA DETALHES DA REQUISIÇÃO (EX: IP, AGENTE DE USUÁRIO)
+
+               // ADICIONA DETALHES EXTRAS NA "PULSEIRINHA", COMO DE ONDE A PESSOA VEIO (IP).
                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-               // COLOCA ESSA AUTENTICAÇÃO NO CONTEXTO DE SEGURANÇA PARA SER USADA DURANTE A REQUISIÇÃO
+               
+
+               // O PASSO MAIS IMPORTANTE**: COLOCA A "PULSEIRINHA VIP" NO CONTEXTO DE SEGURANÇA.
+               // A PARTIR DE AGORA, O SISTEMA TODO SABE QUE ESTA PESSOA ESTÁ AUTENTICADA.
                SecurityContextHolder.getContext().setAuthentication(authToken);
            }
        }
-       // PASSA A REQUISIÇÃO PARA O PRÓXIMO FILTRO DA CADEIA
+
+       // PASSO 3: DEIXAR A PESSOA CONTINUAR NA FILA.
+       // PASSA A REQUISIÇÃO PARA O PRÓXIMO FILTRO OU PARA O DESTINO FINAL (O CONTROLLER).
+       // SE ISSO NÃO FOR CHAMADO, A PESSOA FICA PRESA NA PORTA!
        filterChain.doFilter(request, response);
 
+       
+       // SE O CRACHÁ FOR FALSO, EXPIRADO, ESTRAGADO OU QUALQUER OUTRO PROBLEMA...
    } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException 
            | SignatureException | ResponseStatusException e) {
-       // SE ALGUMA EXCEÇÃO DE TOKEN ACONTECER (TOKEN EXPIRADO, MAL FORMADO, ETC),
-       // ENVIA O STATUS 403 (FORBIDDEN) PARA O CLIENTE E PARA A EXECUÇÃO
+       
+	   
+       // O SEGURANÇA BARRA A ENTRADA E AVISA QUE O ACESSO É PROIBIDO.
+
        response.setStatus(HttpStatus.FORBIDDEN.value());
        return;
    }

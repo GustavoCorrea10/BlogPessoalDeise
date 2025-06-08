@@ -1,72 +1,62 @@
+// PACOTE: É O ENDEREÇO DA CASA ONDE ESTE CÓDIGO MORA.
 package com.gustavo.blogpessoaldeise.security;
 
+// IMPORTAÇÕES: SÃO AS FERRAMENTAS QUE O CÓDIGO PEGA DE OUTRAS CAIXAS DE FERRAMENTAS PARA PODER TRABALHAR.
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-//@COMPONENT É UMA ANOTAÇÃO DO SPRING QUE DIZ PARA ELE CRIAR E GERENCIAR UM OBJETO DESTA CLASSE AUTOMATICAMENTE QUANDO A APLICAÇÃO INICIAR.
-//ISSO PERMITE QUE ESSA CLASSE SEJA USADA FACILMENTE EM OUTRAS PARTES DO PROJETO SEM QUE VOCÊ PRECISE CRIAR O OBJETO MANUALMENTE COM "NEW".
-//É COMO SE O SPRING FICASSE RESPONSÁVEL POR PREPARAR E ENTREGAR ESSA CLASSE PRONTA PARA QUEM PRECISAR USÁ-LA.
+// @COMPONENT: É UM AVISO PARA O CHEFE (O SPRING) E DIZ: "EI, QUANDO O TRABALHO COMEÇAR, ME DEIXE PRONTO PARA USAR!".
+// O SPRING GUARDA ESSE SERVIÇO EM UMA "PRATELEIRA" PARA ENTREGAR A QUEM PRECISAR.
 @Component
 public class JwtService {
 
-	// STATIC = SIGNIFICA QUE A VARIÁVEL PERTENCE À CLASSE E NÃO AO OBJETO
-	// FINAL = SIGNIFICA QUE O VALOR NÃO PODE SER MUDADO (É CONSTANTE)
-	// STRING = O TIPO DA VARIÁVEL
-	// SECRET = É O NOME DA VARIÁVEL
-	public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+	// @VALUE: É COMO UM BILHETE QUE DIZ: "VÁ ATÉ O ARQUIVO DE CONFIGURAÇÕES ('application.properties'),
+	// ENCONTRE A LINHA 'blog.security.jwt.secret' E TRAGA O VALOR DELA PARA CÁ".
+	@Value("${blog.security.jwt.secret}")
+	// PRIVATE STRING SECRET: É UMA GAVETA SECRETA DENTRO DA CLASSE ONDE GUARDAMOS A SENHA MESTRA
+	// QUE VEIO DO ARQUIVO DE CONFIGURAÇÕES.
+	private String secret;
 
 	
 	
 	
 	
-	
-	// MÉTODO PRIVADO getSignKey
-	// Key = É O TIPO DE DADO USADO PARA REPRESENTAR UMA CHAVE DE SEGURANÇA
+	// ESTE MÉTODO É O "FERREIRO". ELE PEGA A SENHA MESTRA, QUE É UM TEXTO,
+	// E A TRANSFORMA EM UMA CHAVE DE METAL DE VERDADE, QUE PODE SER USADA PARA TRANCAR E DESTRANCAR OS CRACHÁS.
 	private Key getSignKey() {
-		
-		// BYTE = TIPO DE DADO QUE REPRESENTA UM NÚMERO PEQUENO
-		// [] = SIGNIFICA QUE É UM ARRAY (LISTA DE BYTES)
-		// keyBytes = NOME DA VARIÁVEL
-		byte[] keyBytes = Decoders.BASE64.decode(SECRET);
-		
-		// SECRET É UMA STRING QUE ESTÁ EM FORMATO BASE64
-		// Decoders.BASE64.decode() CONVERTE A STRING EM BYTES
-		// ISSO É NECESSÁRIO PARA CRIAR UMA CHAVE DE SEGURANÇA USÁVEL
-
+		// DECODE: TRANSFORMA O TEXTO DA SENHA EM UM FORMATO QUE O COMPUTADOR ENTENDE MELHOR (BYTES).
+		byte[] keyBytes = Decoders.BASE64.decode(this.secret);
+		// HMACSHAKEYFOR: CRIA A "CHAVE DE METAL" (A CHAVE DE ASSINATURA) A PARTIR DESSE MATERIAL.
 		return Keys.hmacShaKeyFor(keyBytes);
-		// Keys.hmacShaKeyFor() PEGA OS BYTES E CRIA UMA CHAVE SEGURA PARA ASSINAR E VALIDAR O TOKEN
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// MÉTODO PRIVADO QUE EXTRAI TODAS AS INFORMAÇÕES (CLAIMS) DO TOKEN
+	// ESTE MÉTODO É O "LEITOR DE CRACHÁ". ELE PEGA UM CRACHÁ (TOKEN)
+	// E USA A CHAVE DE METAL PARA ABRIR E LER TODAS AS INFORMAÇÕES ESCRITAS DENTRO DELE.
+	// 'CLAIMS' SÃO AS INFORMAÇÕES: NOME DO DONO, VALIDADE, ETC.
+	// SE ALGUÉM TENTAR USAR UM CRACHÁ FALSO (COM A ASSINATURA ERRADA), ESTE MÉTODO DARÁ UM ERRO.
 	private Claims extractAllClaims(String token) {
-		// Jwts.parserBuilder() CRIA UM OBJETO QUE CONSEGUE LER O TOKEN
-		// .setSigningKey(getSignKey()) DEFINE A CHAVE DE ASSINATURA
-		// .parseClaimsJws(token) FAZ A LEITURA DO TOKEN
-		// .getBody() DEVOLVE SOMENTE O CORPO DO TOKEN, ONDE ESTÃO OS CLAIMS (DADOS)
 		return Jwts.parserBuilder()
 				.setSigningKey(getSignKey()).build()
 				.parseClaimsJws(token).getBody();
@@ -78,135 +68,83 @@ public class JwtService {
 	
 	
 	
-	
-	
-	
-	
-	
-	// MÉTODO GENÉRICO QUE EXTRAI UMA INFORMAÇÃO ESPECÍFICA DO TOKEN
-	// <T> T = SIGNIFICA QUE ESSE MÉTODO PODE RETORNAR QUALQUER TIPO DE DADO
-	// claimsResolver = FUNÇÃO QUE DIZ QUAL DADO PEGAR DOS CLAIMS
+	// ESTE É UM MÉTODO "ESPERTINHO". EM VEZ DE LER TUDO DO CRACHÁ SEMPRE,
+	// ELE DEIXA VOCÊ PEDIR SÓ A INFORMAÇÃO QUE QUER.
+	// VOCÊ DIZ: "ME DÊ SÓ O NOME DO DONO", E ELE PEGA SÓ ISSO PRA VOCÊ.
 	public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-		final Claims claims = extractAllClaims(token); // PEGA TODOS OS CLAIMS DO TOKEN
-		return claimsResolver.apply(claims); // APLICA A FUNÇÃO PARA PEGAR A INFORMAÇÃO ESPECÍFICA
+		final Claims claims = extractAllClaims(token);
+		return claimsResolver.apply(claims);
 	}
 
 	
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	// MÉTODO PARA PEGAR O USERNAME DO TOKEN
-	// O USERNAME FICA NO CAMPO "SUBJECT" DOS CLAIMS
+	// AQUI USAMOS O MÉTODO "ESPERTINHO" PARA PEGAR INFORMAÇÕES ESPECÍFICAS.
+	// EXTRACTUSERNAME: PEGA O NOME DO DONO DO CRACHÁ (O E-MAIL).
 	public String extractUsername(String token) {
-		return extractClaim(token, Claims::getSubject); // USA O MÉTODO GENÉRICO PARA PEGAR O SUBJECT
+		return extractClaim(token, Claims::getSubject);
 	}
 
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	// MÉTODO PARA PEGAR A DATA DE EXPIRAÇÃO DO TOKEN
+	// EXTRACTEXPIRATION: PEGA A DATA DE VALIDADE ESCRITA NO CRACHÁ.
 	public Date extractExpiration(String token) {
-		return extractClaim(token, Claims::getExpiration); // USA O MÉTODO GENÉRICO PARA PEGAR A EXPIRAÇÃO
+		return extractClaim(token, Claims::getExpiration);
 	}
 
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	// MÉTODO PRIVADO PARA VERIFICAR SE O TOKEN JÁ EXPIROU
+	// ESTE MÉTODO OLHA O RELÓGIO. ELE PEGA A DATA DE VALIDADE DO CRACHÁ E COMPARA COM A HORA ATUAL.
+	// SE A HORA ATUAL JÁ PASSOU DA VALIDADE, ELE AVISA QUE O CRACHÁ "VENCEU".
 	private Boolean isTokenExpired(String token) {
-		// COMPARA A DATA DE EXPIRAÇÃO COM A DATA ATUAL
 		return extractExpiration(token).before(new Date());
 	}
 
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	// MÉTODO PARA VERIFICAR SE O TOKEN É VÁLIDO
-	// ELE VERIFICA SE O USERNAME DO TOKEN É IGUAL AO USERNAME DO USUÁRIO LOGADO
-	// E TAMBÉM SE O TOKEN NÃO EXPIROU
+	// ESTE É O "VERIFICADOR FINAL". ELE FAZ DUAS PERGUNTAS IMPORTANTES PARA SABER SE O CRACHÁ É BOM:
+	// 1. "O NOME ESCRITO NESTE CRACHÁ É O MESMO NOME DESTA PESSOA QUE ESTÁ NA MINHA FRENTE?"
+	// 2. "ESTE CRACHÁ AINDA ESTÁ DENTRO DA VALIDADE?"
+	// SÓ SE AS DUAS RESPOSTAS FOREM "SIM", O CRACHÁ É CONSIDERADO VÁLIDO.
 	public Boolean validateToken(String token, UserDetails userDetails) {
-		final String email = extractUsername(token); // PEGA O USERNAME DO TOKEN
-		return (email.equals(userDetails.getUsername()) && !isTokenExpired(token)); // COMPARA E VERIFICA A VALIDADE
+		final String email = extractUsername(token);
+		return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	// MÉTODO PRIVADO QUE CRIA UM NOVO TOKEN
-	// claims = INFORMAÇÕES EXTRAS QUE PODEM SER ADICIONADAS AO TOKEN
-	// userName = USERNAME QUE VAI FICAR DENTRO DO TOKEN
+	// ESTA É A "MÁQUINA QUE FAZ O CRACHÁ".
+	// ELA PEGA UM MOLDE EM BRANCO E VAI PREENCHENDO:
 	private String createToken(Map<String, Object> claims, String userEmail) {
 		return Jwts.builder()
-				.setClaims(claims) // ADICIONA AS INFORMAÇÕES EXTRAS
-				.setSubject(userEmail) // DEFINE O USERNAME
-				.setIssuedAt(new Date(System.currentTimeMillis())) // DATA DE CRIAÇÃO DO TOKEN
-				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // EXPIRA EM 1 HORA
-				.signWith(getSignKey(), SignatureAlgorithm.HS256) // ASSINA O TOKEN COM A CHAVE E O ALGORITMO
-				.compact(); // FINALIZA E DEVOLVE O TOKEN EM FORMATO STRING
+				// SETCLAIMS: ADICIONA INFORMAÇÕES EXTRAS NO CRACHÁ (SE TIVER).
+				.setClaims(claims)
+				// SETSUBJECT: ESCREVE O NOME DO DONO (O E-MAIL).
+				.setSubject(userEmail)
+				// SETISSUEDAT: CARIMBA A DATA E HORA QUE O CRACHÁ FOI FEITO.
+				.setIssuedAt(new Date(System.currentTimeMillis()))
+				// SETEXPIRATION: CARIMBA A DATA E HORA QUE O CRACHÁ VAI VENCER (DAQUI A 1 HORA).
+				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+				// SIGNWITH: USA A "CHAVE DE METAL" (A CHAVE SECRETA) PARA DAR UMA ASSINATURA ÚNICA E SEGURA NO CRACHÁ.
+				.signWith(getSignKey(), SignatureAlgorithm.HS256)
+				// COMPACT: FINALIZA E ENTREGA O CRACHÁ PRONTO, EM FORMATO DE TEXTO.
+				.compact();
 	}
 
 	
 	
 	
 	
-	
-	
-	
-	
-	
-	// MÉTODO PÚBLICO QUE GERA O TOKEN
-	// ELE CHAMA O MÉTODO DE CIMA COM UMA LISTA VAZIA DE CLAIMS E O USERNAME
+	// ESTE É O BOTÃO "FAZER UM CRACHÁ NOVO" QUE AS OUTRAS PARTES DO PROGRAMA VÃO APERTAR.
+	// ELE SIMPLESMENTE CHAMA A "MÁQUINA DE FAZER CRACHÁ" E PASSA O E-MAIL DA PESSOA.
 	public String generateToken(String userEmail) {
-		Map<String, Object> claims = new HashMap<>(); // CRIA UM MAPA VAZIO DE CLAIMS
-		return createToken(claims, userEmail); // GERA O TOKEN
+		Map<String, Object> claims = new HashMap<>();
+		return createToken(claims, userEmail);
 	}
-	
-	
-	
-	
-	
-	/*
-	RESUMO:
-	ESSA CLASSE É RESPONSÁVEL POR CRIAR E VALIDAR TOKENS JWT,
-	QUE SÃO USADOS PARA GARANTIR A SEGURANÇA NAS COMUNICAÇÕES ENTRE CLIENTE E SERVIDOR.
-	ELA CONVERTE UMA CHAVE SECRETA (EM BASE64) PARA UMA CHAVE QUE PODE ASSINAR OS TOKENS,
-	EXTRAI INFORMAÇÕES DO TOKEN COMO O USERNAME E A DATA DE EXPIRAÇÃO,
-	VERIFICA SE O TOKEN AINDA ESTÁ VÁLIDO (NÃO EXPIRADO E PERTENCE AO USUÁRIO CORRETO),
-	E POR FIM, GERA NOVOS TOKENS COM INFORMAÇÕES BÁSICAS E TEMPO DE VALIDADE DEFINIDO.
-	COM ESSA CLASSE, O SISTEMA CONSEGUE CONTROLAR ACESSOS DE FORMA SEGURA USANDO JWT.
-*/
-
 
 }
