@@ -7,6 +7,8 @@ public class UsuarioResponseDTO {
 	private String nome;
 	private String email;
 	private String foto;
+	
+	
 	public Long getId() {
 		return id;
 	}

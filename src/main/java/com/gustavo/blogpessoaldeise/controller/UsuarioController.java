@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.gustavo.blogpessoaldeise.model.Usuario;
+import com.gustavo.blogpessoaldeise.model.UsuarioLogin;
 import com.gustavo.blogpessoaldeise.model.UsuarioResponseDTO;
 import com.gustavo.blogpessoaldeise.repository.UsuarioRepository;
 import com.gustavo.blogpessoaldeise.service.UsuarioService;
@@ -26,7 +27,7 @@ import com.gustavo.blogpessoaldeise.service.UsuarioService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/usuarios")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UsuarioController {
 
@@ -46,11 +47,28 @@ public class UsuarioController {
 	
 	
 	
-	@PostMapping("/criar")
+	@PostMapping("/cadastrar")
 	public ResponseEntity<UsuarioResponseDTO> post(@Valid @RequestBody Usuario usuario) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.criarUsuario(usuario));
 	}
 
+	
+	
+	
+
+	@PostMapping("/logar")
+	public ResponseEntity<UsuarioLogin> logar(@RequestBody UsuarioLogin usuarioLogin) {
+	    
+	    // CHAMA O SERVIÇO DE AUTENTICAÇÃO E ESPERA UMA RESPOSTA.
+	    return usuarioService.autenticarUsuario(usuarioLogin)
+	        // SE O SERVIÇO RETORNAR UM OBJETO (LOGIN COM SUCESSO),
+	        // O '.map' TRANSFORMA ISSO EM UMA RESPOSTA '200 OK' COM OS DADOS.
+	        .map(resposta -> ResponseEntity.ok(resposta))
+	        
+	        // SE O SERVIÇO RETORNAR VAZIO (LOGIN FALHOU),
+	        // O '.orElse' CRIA UMA RESPOSTA '401 UNAUTHORIZED' (NÃO AUTORIZADO).
+	        .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+	}
 	
 	
 	
