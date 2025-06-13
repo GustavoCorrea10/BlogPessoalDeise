@@ -2,7 +2,7 @@ package com.gustavo.blogpessoaldeise.model;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -30,7 +30,7 @@ public class Postagem {
 	@Size(max = 3000, message = "Digite no maximo 3000 caracteres")
 	private String fotoPostagem;
 
-	@UpdateTimestamp
+	@CreationTimestamp
 	private LocalDateTime dataPostagem;
 
 	@ManyToOne

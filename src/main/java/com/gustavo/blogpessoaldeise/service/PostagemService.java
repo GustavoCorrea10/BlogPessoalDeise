@@ -153,11 +153,18 @@ public class PostagemService {
 	        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "O usuário não tem permissão para editar esta postagem!");
 	    }
 
+	    // PASSO 3.1: ATUALIZAR OS CAMPOS DA POSTAGEM ORIGINAL COM OS NOVOS DADOS
+	    // AGORA QUE SABEMOS QUE A POSTAGEM EXISTE E QUE O USUÁRIO TEM PERMISSÃO,
+	    // PEGAMOS OS NOVOS DADOS (TEXTO E FOTO) ENVIADOS NA POSTAGEM E APLICAMOS NA POSTAGEM ORIGINAL
+	    // USAMOS OS MÉTODOS .SETTEXTO(...) E .SETFOTOPOSTAGEM(...) PARA ATUALIZAR ESSES CAMPOS
+	    postagemOriginal.setTexto(postagem.getTexto());
+	    postagemOriginal.setFotoPostagem(postagem.getFotoPostagem());
+
 	    // PASSO 4: SALVAR A POSTAGEM EDITADA
 	    // JÁ QUE PASSOU PELA VERIFICAÇÃO, SALVAMOS A POSTAGEM QUE VEIO COM OS DADOS NOVOS
 	    // SALVAMOS A POSTAGEM EDITADA USANDO O REPOSITÓRIO. O MÉTODO .SAVE(...) ATUALIZA A POSTAGEM NO BANCO,
 	    // E RETORNA O OBJETO ATUALIZADO, QUE É ARMAZENADO NA VARIÁVEL POSTAGEMATUALIZADA.
-	    Postagem postagemAtualizada = postagemRepository.save(postagem);
+	    Postagem postagemAtualizada = postagemRepository.save(postagemOriginal);
 
 	    // PASSO 5: CRIAR UM OBJETO DTO PARA RETORNAR AO CLIENTE
 	    // O DTO (DATA TRANSFER OBJECT) É UMA FORMA SEGURA DE ENVIAR DADOS PELA API
@@ -182,6 +189,7 @@ public class PostagemService {
 	    // POR FIM, RETORNAMOS O DTO COM A POSTAGEM ATUALIZADA E OS DADOS DO USUÁRIO
 	    return postagemDTO;
 	}
+
 
 
 	
