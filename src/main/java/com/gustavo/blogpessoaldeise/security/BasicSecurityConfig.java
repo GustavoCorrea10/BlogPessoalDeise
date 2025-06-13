@@ -87,6 +87,7 @@ public class BasicSecurityConfig {
 		        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() 
 		        .requestMatchers(HttpMethod.GET, "/usuarios").permitAll()
 				.requestMatchers("/usuarios/cadastrar").permitAll().requestMatchers("/error/**").permitAll()
+				.requestMatchers("/").permitAll()
 				.requestMatchers(HttpMethod.OPTIONS).permitAll().anyRequest().authenticated())
 				.authenticationProvider(authenticationProvider())
 				.addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class).httpBasic(basic -> basic.disable());
