@@ -12,6 +12,12 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 
+// IMPORTS NECESSÁRIOS PARA A SEGURANÇA NO SWAGGER
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.Components;
+
+
 @Configuration
 public class SwaggerConfig {
 
@@ -29,8 +35,19 @@ public class SwaggerConfig {
 								.email("gustavocorreaa11@gmail.com")))
 
 				.externalDocs(new ExternalDocumentation().description("Github")
-						.url("https://github.com/GustavoCorrea10/Projeto_guia_blogPessoal/"));
+						.url("https://github.com/GustavoCorrea10/Projeto_guia_blogPessoal/"))
+                
+                
+                
+                .components(new Components()
+                        .addSecuritySchemes("JWT", new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP) 
+                                .scheme("bearer") 
+                                .bearerFormat("JWT") 
+                                .name("JWT"))) 
 
+                .addSecurityItem(new SecurityRequirement().addList("JWT"));
+                // **** FIM DA NOVA CONFIGURAÇÃO DE SEGURANÇA ****
 	}
 
 	@Bean
@@ -48,8 +65,6 @@ public class SwaggerConfig {
 				apiResponses.addApiResponse("400", createApiResponse("Erro na Requisição!"));
 				apiResponses.addApiResponse("404", createApiResponse("Objeto Não Encontrado!"));
 				apiResponses.addApiResponse("500", createApiResponse("Erro na Aplicação!"));
-				//apiResponses.addApiResponse("401", createApiResponse("Acesso Não Autorizado!"));
-				//apiResponses.addApiResponse("403", createApiResponse("Acesso Proibido!"));
 
 			}));
 		};
