@@ -168,49 +168,42 @@ public class UsuarioService {
         
         
         
+        public UsuarioResponseDTO atualizarUsuario(Usuario usuarioAtualizado, Long idUsuarioLogado) {
 
-	public UsuarioResponseDTO atualizarUsuario(Usuario usuario, Long idUsuarioLogado) {
-		
-		
-		 // AQUI ESTÁ A NOVA REGRA DE SEGURANÇA (AUTORIZAÇÃO)
-	    // VERIFICAMOS SE O ID DO USUÁRIO QUE VEIO NO CORPO DA REQUISIÇÃO ('usuario.getId()')
-	    // É O MESMO ID DO USUÁRIO QUE ESTÁ LOGADO ('idUsuarioLogado').
-		//.equals = É UM METODO QUE COMPARA O CONTEUDO DE DOIS OBJETOS PARA SABER SE ELES SÃO IGUAIS DE VERDADE
-	    if (!usuario.getId().equals(idUsuarioLogado)) {
-	    	
-	    	
-	        // SE NÃO FOREM IGUAIS, LANÇAMOS UM ERRO 403 - FORBIDDEN (ACESSO PROIBIDO).
-	        // É O SISTEMA DIZENDO: "VOCÊ NÃO TEM PERMISSÃO PARA MEXER NAS COISAS DE OUTRA PESSOA."
-	        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "O usuário não tem permissão para atualizar os dados de outro usuário!");
-	    }
-	    
-	    
-	    
-		
-		// VERIFICA SE O USUARIO EXISTE PELO ID
-		if (!usuarioRepository.existsById(usuario.getId())) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario não encontrado");
-		}
-				
-		Optional<Usuario> usuarioExiste = usuarioRepository.findByEmail(usuario.getEmail());
-				
-		if(usuarioExiste.isPresent() && !usuarioExiste.get().getId().equals(usuario.getId())) {
-	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O e-mail informado já está em uso por outro usuário.");
+            // VERIFICA SE O USUÁRIO LOGADO ESTÁ TENTANDO EDITAR OS PRÓPRIOS DADOS
+            // SE O ID DO USUÁRIO A SER EDITADO FOR DIFERENTE DO ID DO USUÁRIO LOGADO, BLOQUEIA
+            if (!usuarioAtualizado.getId().equals(idUsuarioLogado)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "O USUÁRIO NÃO TEM PERMISSÃO PARA ATUALIZAR OS DADOS DE OUTRO USUÁRIO!");
+            }
 
-		}
+            // PROCURA O USUÁRIO NO BANCO USANDO O ID INFORMADO
+            Optional<Usuario> optionalUsuarioNoBanco = usuarioRepository.findById(usuarioAtualizado.getId());
+            if (optionalUsuarioNoBanco.isEmpty()) {
+                // SE NÃO ENCONTRAR, RETORNA ERRO 404
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "USUARIO NÃO ENCONTRADO PELO ID PARA ATUALIZAÇÃO");
+            }
 
-		Usuario novoUsuario = usuarioRepository.save(usuario);
-		
-		UsuarioResponseDTO usuarioResponseDTO = new UsuarioResponseDTO();
-		
-		usuarioResponseDTO.setId(novoUsuario.getId());
-		usuarioResponseDTO.setNome(novoUsuario.getNome());
-		usuarioResponseDTO.setEmail(novoUsuario.getEmail());
-		usuarioResponseDTO.setFoto(novoUsuario.getFoto());
-				
-		return usuarioResponseDTO;
-	}
-	
+            // OBTÉM O USUÁRIO ENCONTRADO NO BANCO
+            Usuario usuarioNoBanco = optionalUsuarioNoBanco.get();
+
+            // ATUALIZA APENAS O NOME E A FOTO COM OS NOVOS VALORES RECEBIDOS
+            usuarioNoBanco.setNome(usuarioAtualizado.getNome());
+            usuarioNoBanco.setFoto(usuarioAtualizado.getFoto());
+
+            // SALVA AS ALTERAÇÕES NO BANCO (SOMENTE NOME E FOTO FORAM MODIFICADOS)
+            Usuario novoUsuarioSalvo = usuarioRepository.save(usuarioNoBanco);
+
+            // MONTA O OBJETO DE RESPOSTA COM OS DADOS ATUALIZADOS (SEM SENHA)
+            UsuarioResponseDTO usuarioResponseDTO = new UsuarioResponseDTO();
+            usuarioResponseDTO.setId(novoUsuarioSalvo.getId());         // ID DO USUÁRIO
+            usuarioResponseDTO.setNome(novoUsuarioSalvo.getNome());     // NOME ATUALIZADO
+            usuarioResponseDTO.setEmail(novoUsuarioSalvo.getEmail());   // EMAIL ORIGINAL (NÃO FOI ALTERADO AQUI)
+            usuarioResponseDTO.setFoto(novoUsuarioSalvo.getFoto());     // FOTO ATUALIZADA
+
+            // RETORNA A RESPOSTA COM OS NOVOS DADOS DO USUÁRIO
+            return usuarioResponseDTO;
+        }
+
 	
 	
 	
